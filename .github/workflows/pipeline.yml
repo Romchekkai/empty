@@ -1,0 +1,47 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - '**'   # реагировать на пуш в любую ветку
+
+jobs:
+  ci:
+    name: CI - Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: sudo apt-get update && sudo apt-get install -y ansible
+
+      - name: Run CI playbook
+        run: ansible-playbook ci.yml
+
+  cd:
+    name: CD - Deploy
+    needs: ci
+    if: github.ref == 'refs/heads/master'   # деплой только из master
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: sudo apt-get update && sudo apt-get install -y ansible
+
+      - name: Setup SSH key for production
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.PROD_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Create Ansible inventory
+        run: |
+          echo "[production]" > inventory.ini
+          echo "${{ secrets.PROD_HOST }} ansible_user=${{ secrets.PROD_USER }} ansible_ssh_private_key_file=~/.ssh/id_rsa" >> inventory.ini
+
+      - name: Run CD deploy playbook
+        run: ansible-playbook -i inventory.ini cd_deploy.yml
