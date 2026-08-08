@@ -1,1 +1,15 @@
-
+- hosts: localhost
+  tasks:
+    - name: Копирование project.sh
+      copy:
+        src: project.sh
+        dest: /tmp/project.sh
+        mode: '0755'
+    - name: Запуск теста
+      command: /tmp/project.sh
+      register: test_result
+      ignore_errors: yes
+    - name: Проверка результата
+      fail:
+        msg: "CI тест не пройден!"
+      when: test_result.rc != 0
