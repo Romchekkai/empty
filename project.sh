@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SUCCESS=false
+SUCCESS=true
 
 echo "Запуск процесса..."
 
