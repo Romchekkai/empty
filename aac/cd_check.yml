@@ -1,1 +1,9 @@
-
+- hosts: localhost
+  tasks:
+    - name: Проверка ветки
+      command: git rev-parse --abbrev-ref HEAD
+      register: branch
+    - name: Fail если не master
+      fail:
+        msg: "CD запускается только для master!"
+      when: branch.stdout != "master"
