@@ -1,1 +1,11 @@
-
+- hosts: production
+  tasks:
+    - name: Копирование приложения
+      copy:
+        src: /tmp/project.sh
+        dest: /opt/project/project.sh
+        mode: '0755'
+    - name: Перезапуск сервиса
+      systemd:
+        name: project.service
+        state: restarted
